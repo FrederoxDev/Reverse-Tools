@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SymbolDumper", "SymbolDumper.csproj", "{16466A8C-A1A5-4290-840D-CBD6AE2809B2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16466A8C-A1A5-4290-840D-CBD6AE2809B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16466A8C-A1A5-4290-840D-CBD6AE2809B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16466A8C-A1A5-4290-840D-CBD6AE2809B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16466A8C-A1A5-4290-840D-CBD6AE2809B2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6FA54505-528F-4CA5-B4E5-C8EB50C4639D}
+	EndGlobalSection
+EndGlobal
