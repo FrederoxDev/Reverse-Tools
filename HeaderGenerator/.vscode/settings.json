@@ -1,0 +1,8 @@
+{
+    "python.autoComplete.extraPaths": [
+        "../CxxParser"
+    ],
+    "python.analysis.extraPaths": [
+        "../CxxParser"
+    ]
+}

@@ -1,6 +1,5 @@
 from typing import List
 
-
 class Parser:
     tokens: []
     idx: int
@@ -181,6 +180,25 @@ class Parser:
 
         return stringified
 
+    def parsed_func_to_str(self, parsed):
+        stringified = ""
+
+        if "publicity" in parsed and parsed['publicity'] is not None:
+            stringified += f"{parsed['publicity']}: "
+
+        if "modifier" in parsed and parsed['modifier'] is not None:
+            stringified += f"{parsed['modifier']} "
+
+        if "return_type" in parsed and parsed['return_type'] is not None:
+            stringified += f"{self.parsed_type_to_str(parsed['return_type'])} "
+
+        if "calling_convention" in parsed and parsed['calling_convention'] is not None:
+            stringified += f"{parsed['calling_convention']} "
+
+        stringified += f"{self.parsed_type_to_str(parsed['body'])}"
+
+        return stringified
+
     def parse(self):
         publicity = self.try_consume_token("Identifier", [ "private", "public", "protected" ])
         if publicity is not None:
@@ -188,6 +206,22 @@ class Parser:
 
         modifiers = self.try_consume_token("Identifier", [ "virtual", "static" ])
 
-        return_type = self.parse_type()    
-        print(return_type)
-        print("return type: ", self.parsed_type_to_str(return_type))
+        return_type = self.parse_type() 
+
+        # This function has no return type and what we have just parsed was actually the function itself
+        if len(self.tokens) - 1 <= self.idx:
+            return {
+                "body": return_type,
+                "return_type": None
+            }
+
+        calling_convention = self.try_consume_token("Identifier", ["__thiscall", "__fastcall"])
+        body = self.parse_type()
+
+        return {
+            "body": body,
+            "return_type": return_type,
+            "publicity": publicity,
+            "modifier": modifiers,
+            "calling_convention": calling_convention
+        }
