@@ -38,7 +38,7 @@ def get_param_names(func_ea):
 
 all_functions = idautils.Functions()
 
-target = "Item"
+target = "BlockLegacy"
 
 data = {}
 

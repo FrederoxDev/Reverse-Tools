@@ -59,6 +59,9 @@ class Parser:
     def parse_type(self):
         is_const = self.try_consume_token("Identifier", "const") is not None 
         is_unsigned = self.try_consume_token("Identifier", "unsigned") is not None
+        
+        #TODO: Store this :!
+        self.try_consume_token("Identifier", ["struct", "enum", "class"])
 
         name = self.consume_token("Identifier", None)
         generics = []
