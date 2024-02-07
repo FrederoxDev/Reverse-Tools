@@ -71,6 +71,41 @@ def type_to_str(parsed):
             stringified += f"({', '.join(params)})"
 
     return stringified
+  
+def type_to_raw(parsed):
+    if isinstance(parsed, str):
+        return parsed
+        
+    stringified = ""
+
+    if "namespace" in parsed:
+        stringified += parsed["namespace"] 
+
+        stringified += f"::{type_to_str(parsed['type'])}"
+
+        return stringified
+
+    if "name" in parsed:
+        if parsed["name"] is not None:
+            stringified += type_to_str(parsed['name'])
+
+    if "call_signature" in parsed:
+        if parsed["call_signature"] is None:
+            stringified += "()"
+
+        elif len(parsed["call_signature"]) != 0:
+            params = list(map(type_to_str, parsed["call_signature"]))
+            stringified += f"({', '.join(params)})"
+
+    if "params" in parsed:
+        if parsed["params"] is None:
+            stringified += "()"
+
+        elif len(parsed["params"]) != 0:
+            params = list(map(type_to_str, parsed["params"]))
+            stringified += f"({', '.join(params)})"
+
+    return stringified
     
 def return_type(parsed_function) -> str | None:
     if "return_type" in parsed_function:
@@ -143,3 +178,44 @@ def class_name(parsed_function) -> str:
         return value + class_name(parsed_function["name"])
         
     return value
+
+def get_all_types_used(parsed_function, classes: set, structs: set, enums: set):
+    if "structure_type" in parsed_function:
+        if parsed_function["structure_type"] is not None:
+            type = parsed_function["structure_type"]
+            
+            if type == "struct":
+                structs.add(type_to_raw(parsed_function))
+                
+            elif type == "enum":
+                enums.add(type_to_raw(parsed_function))
+                
+            else:
+                classes.add(type_to_raw(parsed_function))
+                
+    print()
+    print("parsed_func", parsed_function)
+    
+    if "body" in parsed_function:
+        get_all_types_used(parsed_function["body"], classes, structs, enums)
+        
+    if "return_type" in parsed_function:
+        if parsed_function["return_type"] is not None:
+            get_all_types_used(parsed_function["return_type"], classes, structs, enums)
+        
+    if "params" in parsed_function:
+        for param in parsed_function["params"]:
+            get_all_types_used(param, classes, structs, enums)
+            
+    if "generics" in parsed_function:
+        for param in parsed_function["generics"]:
+            get_all_types_used(param, classes, structs, enums)
+            
+    if "type" in parsed_function:
+        if parsed_function["type"] is not None:
+            get_all_types_used(parsed_function["type"], classes, structs, enums)
+            
+    if "name" in parsed_function:
+        if parsed_function["name"] is not None:
+            if isinstance(parsed_function["name"], dict):
+                get_all_types_used(parsed_function["name"], classes, structs, enums)

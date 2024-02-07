@@ -83,6 +83,7 @@ for entry in win_data_dump:
     symbol_name = entry["symbol"]
     
     demangled_name: str | None = api.demangle_name(symbol_name, 0)
+    print(demangled_name)
     
     if demangled_name is None:
         print(f"IDA failed to demangle {symbol_name}")
@@ -161,6 +162,7 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
         "success": True,
         "symbol": win_symbol,
         "win_function": matches[0],
+        "linux_function": linux_function,
         "param_names": matched_params,
         "found_params": found_params
     })

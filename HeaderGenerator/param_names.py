@@ -55,7 +55,6 @@ for func_ea in all_functions:
         tokens = Lexer(demangled).tokenise()
         function = Parser(tokens).parse()
         class_name = Analyser.class_name(function)
-        print(class_name)
         
         if class_name != target + "::":
             continue

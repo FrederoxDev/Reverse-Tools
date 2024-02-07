@@ -68,8 +68,7 @@ class Parser:
         is_const = self.try_consume_token("Keyword", "const") is not None 
         is_unsigned = self.try_consume_token("Keyword", "unsigned") is not None
         
-        #TODO: Store this :!
-        self.try_consume_token("Keyword", ["struct", "enum", "class"])
+        structure_type = self.try_consume_token("Keyword", ["struct", "enum", "class"])
 
         name = self.try_consume_token("Identifier", None)
         generics = []
@@ -146,7 +145,8 @@ class Parser:
             "ref_count": ref_count,
             "ptrs_and_const": ptrs_and_const,
             "params": params,
-            "call_signature": call_signature
+            "call_signature": call_signature,
+            "structure_type": structure_type
         }
 
     def parse(self):
