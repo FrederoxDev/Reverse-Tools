@@ -10,9 +10,11 @@ sys.path.append("../Reverse-Tools/CxxParser/")
 import Lexer
 import Parser
 import Analyser
+import HeaderGenerator
 api.require("Analyser")
 api.require("Lexer")
 api.require("Parser")
+api.require("HeaderGenerator")
 
 amethyst_folder = os.environ.get("amethyst") + "/tools/"
 
@@ -141,7 +143,7 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
         continue
     
     # Try and load parameter names
-    param_name_match = []
+    matched_params = []
     found_params = False
     
     for (named_function, param_names) in named_items:
@@ -151,14 +153,20 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
             function_params = Analyser.simplify_parameters(Analyser.parameter_types(named_function))
             
             if linux_parameters == function_params:
-                param_name_match = param_names
+                matched_params = param_names
                 found_params = True
                 break
     
     matched_vtable.append({
         "success": True,
         "symbol": win_symbol,
-        "win_function": win_function,
-        "param_names": param_name_match,
+        "win_function": matches[0],
+        "param_names": matched_params,
         "found_params": found_params
     })
+    
+generator = HeaderGenerator.HeaderGenerator(class_name, matched_vtable)
+header = generator.to_header()
+
+with open(amethyst_folder + "generated_header.h", "w") as file:
+    file.write(header)
