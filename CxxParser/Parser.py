@@ -95,6 +95,13 @@ class Parser:
         is_const = self.try_consume_token("Identifier", "const") is not None or is_const
         is_ref = self.try_consume_token("Symbol", "&") is not None
         is_ptr = self.try_consume_token("Symbol", "*") is not None
+        
+        is_const_ptr = False
+        
+        if is_ptr:
+            if self.try_consume_token("Identifier", "const") is not None:
+                is_ptr = False
+                is_const_ptr = True   
 
         params = []
         # Things like std::function<int(int, int)>!
@@ -118,6 +125,7 @@ class Parser:
             "is_unsigned": is_unsigned,
             "is_ref": is_ref,
             "is_ptr": is_ptr,
+            "is_const_ptr": is_const_ptr,
             "params": params,
             "call_signature": call_signature
         }
@@ -158,6 +166,10 @@ class Parser:
                 stringified += f"<{', '.join(generics)}>"
 
         if "is_ptr" in parsed:
+            if parsed["is_ptr"]:
+                stringified += "*"
+
+        if "is_const_ptr" in parsed:
             if parsed["is_ptr"]:
                 stringified += "*"
 
