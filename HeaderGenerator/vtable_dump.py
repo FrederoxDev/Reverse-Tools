@@ -95,15 +95,29 @@ for entry in win_data_dump:
         print(demangled_name)
         exit(1)
         
+# Match functions between the windows BDS and linux BDS
 for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     linux_name = Analyser.function_name(linux_function)
+    linux_parameters = Analyser.simplify_parameters(Analyser.parameter_types(linux_function))
     
-    name_matches = []
+    matches = []
+    print(f"Trying to match {linux_name}({', '.join(linux_parameters)})")
     
     for (win_symbol, win_demangled, win_function) in win_class_items:
         win_name = Analyser.function_name(win_function)
         
         if linux_name == win_name:
-            name_matches.append(win_function)
+            win_params = Analyser.simplify_parameters(Analyser.parameter_types(win_function))
             
-    print(linux_name, len(name_matches))
+            if linux_parameters == win_params:
+                matches.append(win_function)
+                print(f"Matched {win_name}({', '.join(win_params)})")
+                
+            else:
+                print(f"Failed to match {win_name}({', '.join(win_params)})")
+                pass
+            
+    if len(matches) != 1:
+        print(f"[MATCH FAILED] {linux_name}({', '.join(linux_parameters)}) got {len(matches)} matches!")
+        
+    print()

@@ -1,9 +1,13 @@
 import json
 from typing import List
 
+type_aliases = [
+    ("std::__1::", "std::"),
+    ("std::basic_string<char, std::char_traits<char>, std::allocator<char>>", "std::string")
+]
+
 # Stringifies a type
 def type_to_str(parsed):
-    print(parsed)
     if isinstance(parsed, str):
         return parsed
         
@@ -84,7 +88,23 @@ def parameter_types(parsed_function) -> List[str]:
     if isinstance(parsed_function["name"], dict):
         return parameter_types(parsed_function["name"])
     
+    if parsed_function["params"] == None:
+        return []
+    
     return list(map(type_to_str, parsed_function["params"]))
+
+def simplify_parameters(parameters: List[str]) -> List[str]:
+    new_params = []
+    
+    for param in parameters:
+        simplified = param
+        
+        for alias in type_aliases:
+            simplified = simplified.replace(alias[0], alias[1])
+            
+        new_params.append(simplified)
+        
+    return new_params
 
 def function_name(parsed_function) -> str:    
     # For functions in a namespace   
