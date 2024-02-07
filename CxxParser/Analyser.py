@@ -3,6 +3,7 @@ from typing import List
 
 # Stringifies a type
 def type_to_str(parsed):
+    print(parsed)
     if isinstance(parsed, str):
         return parsed
         
@@ -37,13 +38,16 @@ def type_to_str(parsed):
             generics = list(map(type_to_str, parsed["generics"]))
             stringified += f"<{', '.join(generics)}>"
 
-    if "is_ptr" in parsed:
-        if parsed["is_ptr"]:
-            stringified += "*"
-
-    if "is_ref" in parsed:
-        if parsed["is_ref"]:
-            stringified += "&"
+    if "ptrs_and_const" in parsed:
+        for ptr_or_const in parsed["ptrs_and_const"]:
+            if ptr_or_const == "const":
+                stringified += " const"
+                
+            else:
+                stringified += "*"
+        
+    if "ref_count" in parsed:
+        stringified += "&" * parsed["ref_count"]
 
     if "call_signature" in parsed:
         if parsed["call_signature"] is None:

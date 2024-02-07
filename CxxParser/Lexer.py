@@ -5,6 +5,7 @@ whitespace_rule = r'\s'
 identifier_rule = r'[a-zA-Z_~]\w*$'
 in_identifier_rule = r'[a-zA-Z_~0-9]\w*$'
 symbol_rule = r'[.,<>():*&]'
+keywords = ["virtual", "static", "const", "class", "struct", "enum", "unsigned"]
 
 class Lexer:
     idx: int
@@ -30,7 +31,11 @@ class Lexer:
             identifier += self.text[self.idx]
             self.idx += 1
 
-        self.tokens.append(("Identifier", identifier))
+        if identifier in keywords:
+            self.tokens.append(("Keyword", identifier))
+            
+        else:
+            self.tokens.append(("Identifier", identifier))
 
     def symbol(self):
         char = self.text[self.idx]

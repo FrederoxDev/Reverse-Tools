@@ -25,7 +25,7 @@ class Parser:
         self.idx += 1
         return value
 
-    def try_consume_token(self, type, values: List[str] | None):
+    def try_consume_token(self, type, values: List[str] | None | str):
         if self.idx >= len(self.tokens):
             return None
         
@@ -39,9 +39,17 @@ class Parser:
             self.idx += 1
             return token[1]
         
-        if token[1] in values:
-            self.idx += 1
-            return token[1]
+        if isinstance(values, str):
+            if values == token[1]:
+                self.idx += 1
+                return token[1]
+            
+            return None
+        
+        for value in values:
+            if value == token[1]:
+                self.idx += 1
+                return token[1]
 
     def parse_params(self, closing_char):
         closing_brace = self.try_consume_token("Symbol", closing_char)
@@ -57,13 +65,13 @@ class Parser:
         return params
 
     def parse_type(self):
-        is_const = self.try_consume_token("Identifier", "const") is not None 
-        is_unsigned = self.try_consume_token("Identifier", "unsigned") is not None
+        is_const = self.try_consume_token("Keyword", "const") is not None 
+        is_unsigned = self.try_consume_token("Keyword", "unsigned") is not None
         
         #TODO: Store this :!
-        self.try_consume_token("Identifier", ["struct", "enum", "class"])
+        self.try_consume_token("Keyword", ["struct", "enum", "class"])
 
-        name = self.consume_token("Identifier", None)
+        name = self.try_consume_token("Identifier", None)
         generics = []
         namespace = None
 
@@ -91,17 +99,29 @@ class Parser:
                 "is_unsigned": is_unsigned
             }
         
-        # For west const
-        is_const = self.try_consume_token("Identifier", "const") is not None or is_const
-        is_ref = self.try_consume_token("Symbol", "&") is not None
-        is_ptr = self.try_consume_token("Symbol", "*") is not None
+        # For right aligned const
+        is_const = self.try_consume_token("Keyword", "const") is not None or is_const
+    
+        ptrs_and_const = []
         
-        is_const_ptr = False
+        while True:
+            const_keyword = self.try_consume_token("Keyword", "const")
+            if const_keyword is not None:
+                ptrs_and_const.append("const")
+                continue
+            
+            ptr_keyword = self.try_consume_token("Symbol", "*")
+            if ptr_keyword is not None:
+                ptrs_and_const.append("*")
+                continue
+            
+            break
+            
+        ref_count = 0
         
-        if is_ptr:
-            if self.try_consume_token("Identifier", "const") is not None:
-                is_ptr = False
-                is_const_ptr = True   
+        # Passing rvalues (&&)
+        while self.try_consume_token("Symbol", "&") is not None:
+            ref_count += 1
 
         params = []
         # Things like std::function<int(int, int)>!
@@ -123,96 +143,11 @@ class Parser:
             "generics": generics,
             "is_const": is_const,
             "is_unsigned": is_unsigned,
-            "is_ref": is_ref,
-            "is_ptr": is_ptr,
-            "is_const_ptr": is_const_ptr,
+            "ref_count": ref_count,
+            "ptrs_and_const": ptrs_and_const,
             "params": params,
             "call_signature": call_signature
         }
-
-    def parsed_type_to_str(self, parsed):
-        if isinstance(parsed, str):
-            return parsed
-        
-        stringified = ""
-
-        if "is_const" in parsed:
-            if parsed["is_const"]:
-                stringified += "const "
-
-        if "is_unsigned" in parsed:
-            if parsed["is_unsigned"]:
-                stringified += "unsigned "
-
-        if "namespace" in parsed:
-            stringified += parsed["namespace"] 
-
-            if "generics" in parsed:
-                if len(parsed["generics"]) != 0:
-                    generics = list(map(self.parsed_type_to_str, parsed["generics"]))
-                    stringified += f"<{', '.join(generics)}>"
-
-            stringified += f"::{self.parsed_type_to_str(parsed['type'])}"
-
-            return stringified
-
-        if "name" in parsed:
-            if parsed["name"] is not None:
-                stringified += self.parsed_type_to_str(parsed['name'])
-
-        if "generics" in parsed:
-            if len(parsed["generics"]) != 0:
-                generics = list(map(self.parsed_type_to_str, parsed["generics"]))
-                stringified += f"<{', '.join(generics)}>"
-
-        if "is_ptr" in parsed:
-            if parsed["is_ptr"]:
-                stringified += "*"
-
-        if "is_const_ptr" in parsed:
-            if parsed["is_ptr"]:
-                stringified += "*"
-
-        if "is_ref" in parsed:
-            if parsed["is_ref"]:
-                stringified += "&"
-
-        if "call_signature" in parsed:
-            if parsed["call_signature"] is None:
-                stringified += "()"
-
-            elif len(parsed["call_signature"]) != 0:
-                params = list(map(self.parsed_type_to_str, parsed["call_signature"]))
-                stringified += f"({', '.join(params)})"
-
-        if "params" in parsed:
-            if parsed["params"] is None:
-                stringified += "()"
-
-            elif len(parsed["params"]) != 0:
-                params = list(map(self.parsed_type_to_str, parsed["params"]))
-                stringified += f"({', '.join(params)})"
-
-        return stringified
-
-    def parsed_func_to_str(self, parsed):
-        stringified = ""
-
-        if "publicity" in parsed and parsed['publicity'] is not None:
-            stringified += f"{parsed['publicity']}: "
-
-        if "modifier" in parsed and parsed['modifier'] is not None:
-            stringified += f"{parsed['modifier']} "
-
-        if "return_type" in parsed and parsed['return_type'] is not None:
-            stringified += f"{self.parsed_type_to_str(parsed['return_type'])} "
-
-        if "calling_convention" in parsed and parsed['calling_convention'] is not None:
-            stringified += f"{parsed['calling_convention']} "
-
-        stringified += f"{self.parsed_type_to_str(parsed['body'])}"
-
-        return stringified
 
     def parse(self):
         publicity = self.try_consume_token("Identifier", [ "private", "public", "protected" ])
