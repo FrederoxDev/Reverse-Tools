@@ -86,17 +86,23 @@ def parameter_types(parsed_function) -> List[str]:
     
     return list(map(type_to_str, parsed_function["params"]))
 
-def function_name(parsed_function) -> str:
+def function_name(parsed_function) -> str:    
     # For functions in a namespace   
-    if "body" in parsed_function:     
+    if "body" in parsed_function:   
         if "type" in parsed_function["body"]:
             return function_name(parsed_function["body"]["type"])
+        
+        if "name" in parsed_function["body"]:
+            return function_name(parsed_function["body"])
     
     # Still in a namespace or generic, go deeper
-    if isinstance(parsed_function["name"], dict):
-        return function_name(parsed_function["name"])
-    
-    return parsed_function["name"]
+    if "name" in parsed_function:
+        if isinstance(parsed_function["name"], dict):
+            return function_name(parsed_function["name"])
+        
+        return parsed_function["name"]
+
+    return ""
 
 # Not fully implemented, doesn't support generics yet!
 def class_name(parsed_function) -> str:

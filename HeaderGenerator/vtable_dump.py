@@ -57,7 +57,7 @@ while start < finish:
     try:
         tokens = Lexer.Lexer(demangled_name).tokenise()
         function = Parser.Parser(tokens).parse()
-        linux_vtable_items.append(function)
+        linux_vtable_items.append((symbol_name, demangled_name, function))
         
     except:
         print("ERROR WHILE PARSING LINUX DECLARATIONS")
@@ -76,8 +76,6 @@ result = subprocess.run(
 win_data_dump = json.loads(result.stdout)
 win_class_items = []
 
-win_excludes = ["_Uninitialized_move"]
-
 for entry in win_data_dump:
     symbol_name = entry["symbol"]
     
@@ -90,10 +88,22 @@ for entry in win_data_dump:
     try:
         tokens = Lexer.Lexer(demangled_name).tokenise()
         function = Parser.Parser(tokens).parse()
-        win_class_items.append(function)
+        win_class_items.append((symbol_name, demangled_name, function))
         
     except:
         print("ERROR WHILE PARSING WIN DECLARATIONS")
         print(demangled_name)
         exit(1)
+        
+for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
+    linux_name = Analyser.function_name(linux_function)
     
+    name_matches = []
+    
+    for (win_symbol, win_demangled, win_function) in win_class_items:
+        win_name = Analyser.function_name(win_function)
+        
+        if linux_name == win_name:
+            name_matches.append(win_function)
+            
+    print(linux_name, len(name_matches))

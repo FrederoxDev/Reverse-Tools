@@ -5,7 +5,9 @@ whitespace_rule = r'\s'
 identifier_rule = r'[a-zA-Z_~]\w*$'
 in_identifier_rule = r'[a-zA-Z_~0-9]\w*$'
 symbol_rule = r'[.,<>():*&]'
-keywords = ["virtual", "static", "const", "class", "struct", "enum", "unsigned"]
+keywords = ["virtual", "static", "const", "class", "struct", "enum", "unsigned", "public", "private", "protected",
+            "__thiscall", "__fastcall"
+            ]
 
 class Lexer:
     idx: int

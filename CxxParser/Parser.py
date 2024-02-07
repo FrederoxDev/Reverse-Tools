@@ -150,11 +150,11 @@ class Parser:
         }
 
     def parse(self):
-        publicity = self.try_consume_token("Identifier", [ "private", "public", "protected" ])
+        publicity = self.try_consume_token("Keyword", [ "private", "public", "protected" ])
         if publicity is not None:
             self.consume_token("Symbol", ":")
 
-        modifiers = self.try_consume_token("Identifier", [ "virtual", "static" ])
+        modifiers = self.try_consume_token("Keyword", [ "virtual", "static" ])
 
         return_type = self.parse_type() 
 
@@ -165,7 +165,7 @@ class Parser:
                 "return_type": None
             }
 
-        calling_convention = self.try_consume_token("Identifier", ["__thiscall", "__fastcall"])
+        calling_convention = self.try_consume_token("Keyword", ["__thiscall", "__fastcall"])
         body = self.parse_type()
 
         return {
