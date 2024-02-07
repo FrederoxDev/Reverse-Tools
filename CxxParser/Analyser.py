@@ -3,6 +3,7 @@ from typing import List
 
 type_aliases = [
     ("std::__1::", "std::"),
+    ("std::__cxx11::", "std::"),
     ("std::basic_string<char, std::char_traits<char>, std::allocator<char>>", "std::string")
 ]
 

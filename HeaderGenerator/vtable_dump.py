@@ -76,6 +76,7 @@ result = subprocess.run(
 win_data_dump = json.loads(result.stdout)
 win_class_items = []
 
+# Process the symbols from the windows BDS
 for entry in win_data_dump:
     symbol_name = entry["symbol"]
     
@@ -95,13 +96,32 @@ for entry in win_data_dump:
         print(demangled_name)
         exit(1)
         
+# Load optional parameter names
+named_items = []
+
+if os.path.exists(amethyst_folder + "param_names.json"):
+    named_data = {}
+    
+    with open(amethyst_folder + "param_names.json", "r") as file:
+        named_data = json.loads(file.read())    
+        
+    for demangled_name in named_data:
+        tokens = Lexer.Lexer(demangled_name).tokenise()
+        function = Parser.Parser(tokens).parse()
+        named_items.append((function, named_data[demangled_name]))
+        
+    print(f"Loaded parameter names for {len(named_items)} functions")
+
+matched_vtable = []
+        
 # Match functions between the windows BDS and linux BDS
 for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     linux_name = Analyser.function_name(linux_function)
     linux_parameters = Analyser.simplify_parameters(Analyser.parameter_types(linux_function))
     
+    print(f"{linux_name}({', '.join(linux_parameters)})")
+    
     matches = []
-    print(f"Trying to match {linux_name}({', '.join(linux_parameters)})")
     
     for (win_symbol, win_demangled, win_function) in win_class_items:
         win_name = Analyser.function_name(win_function)
@@ -111,13 +131,34 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
             
             if linux_parameters == win_params:
                 matches.append(win_function)
-                print(f"Matched {win_name}({', '.join(win_params)})")
-                
-            else:
-                print(f"Failed to match {win_name}({', '.join(win_params)})")
-                pass
             
     if len(matches) != 1:
         print(f"[MATCH FAILED] {linux_name}({', '.join(linux_parameters)}) got {len(matches)} matches!")
+        matched_vtable.append({
+            "success": False,
+            "symbol": linux_symbol
+        })
+        continue
+    
+    # Try and load parameter names
+    param_name_match = []
+    found_params = False
+    
+    for (named_function, param_names) in named_items:
+        function_name = Analyser.function_name(named_function)
         
-    print()
+        if function_name == linux_name:
+            function_params = Analyser.simplify_parameters(Analyser.parameter_types(named_function))
+            
+            if linux_parameters == function_params:
+                param_name_match = param_names
+                found_params = True
+                break
+    
+    matched_vtable.append({
+        "success": True,
+        "symbol": win_symbol,
+        "win_function": win_function,
+        "param_names": param_name_match,
+        "found_params": found_params
+    })
