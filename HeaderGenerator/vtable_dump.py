@@ -41,6 +41,8 @@ linux_vtable_items = []
 
 index = 0
 
+found_dtor = False
+
 while start < finish:
     func_ea = idc.get_qword(start)
     symbol_name = idc.get_func_name(func_ea)
@@ -59,12 +61,40 @@ while start < finish:
     try:
         tokens = Lexer.Lexer(demangled_name).tokenise()
         function = Parser.Parser(tokens).parse()
+        function_name = Analyser.function_name(function)
+        print(function_name)
+        
+        if function_name == f"~{class_name}":
+            # Skip duplicate destructor
+            if found_dtor: continue
+            found_dtor = True
+        
         linux_vtable_items.append((symbol_name, demangled_name, function))
         
     except:
         print("ERROR WHILE PARSING LINUX DECLARATIONS")
         print(demangled_name)
         exit(1)
+    
+# Reverse the order of overloads from linux vtable
+unordered_vtable_items = linux_vtable_items
+linux_vtable_items = []
+prev_name = None
+consecutive = []
+
+for (symbol_name, demangled_name, function) in unordered_vtable_items:
+    name = Analyser.function_name(function)
+    
+    if name == prev_name:
+        consecutive.append((symbol_name, demangled_name, function))
+    else:
+        consecutive.reverse()
+        linux_vtable_items.extend(consecutive)
+        consecutive = [(symbol_name, demangled_name, function)]
+        prev_name = name
+
+consecutive.reverse()
+linux_vtable_items.extend(consecutive)
     
 # Read symbols from windows BDS
 symbol_dumper_path = "C:/Users/blake/Documents/Reverse-Tools/SymbolDumper/bin/Debug/net8.0/SymbolDumper.exe"
@@ -181,3 +211,6 @@ with open(amethyst_folder + "generated_header.h", "w") as file:
     
 with open(amethyst_folder + "generated_assembly.asm", "w") as file:
     file.write(asm)
+    
+print(f"Cxx Output file: '{amethyst_folder + 'generated_header.h'}'")
+print(f"Asm Output file: '{amethyst_folder + 'generated_assembly.asm'}'")

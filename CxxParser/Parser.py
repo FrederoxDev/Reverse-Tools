@@ -169,7 +169,6 @@ class Parser:
         body = self.parse_type()
         
         is_func_const = self.try_consume_token("Keyword", "const") is not None
-        print(self.tokens[self.idx:])
 
         return {
             "body": body,

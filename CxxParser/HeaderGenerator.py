@@ -107,6 +107,8 @@ class HeaderGenerator:
 
         h = h.replace("%FORWARD_DECLS%", forward_decls)
         
+        h = h.replace("\n\n\n\t// Unknown Parameters", "\n\n\t// Unknown Parameters")
+        
         return h
     
     def to_asm(self) -> str:
