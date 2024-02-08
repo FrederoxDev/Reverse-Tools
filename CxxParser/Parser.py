@@ -167,11 +167,15 @@ class Parser:
 
         calling_convention = self.try_consume_token("Keyword", ["__thiscall", "__fastcall"])
         body = self.parse_type()
+        
+        is_func_const = self.try_consume_token("Keyword", "const") is not None
+        print(self.tokens[self.idx:])
 
         return {
             "body": body,
             "return_type": return_type,
             "publicity": publicity,
             "modifier": modifiers,
-            "calling_convention": calling_convention
+            "calling_convention": calling_convention,
+            "is_func_const": is_func_const
         }

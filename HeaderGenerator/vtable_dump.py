@@ -122,6 +122,7 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     linux_parameters = Analyser.simplify_parameters(Analyser.parameter_types(linux_function))
     
     matches = []
+    matched_win_symbol = ""
     
     for (win_symbol, win_demangled, win_function) in win_class_items:
         win_name = Analyser.function_name(win_function)
@@ -131,12 +132,13 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
             
             if linux_parameters == win_params:
                 matches.append(win_function)
+                matched_win_symbol = win_symbol
             
     if len(matches) != 1:
         print(f"[MATCH FAILED] {linux_name}({', '.join(linux_parameters)}) got {len(matches)} matches!")
         matched_vtable.append({
             "success": False,
-            "symbol": linux_symbol
+            "linux_symbol": linux_symbol
         })
         continue
     
@@ -161,7 +163,8 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     
     matched_vtable.append({
         "success": True,
-        "symbol": win_symbol,
+        "linux_symbol": linux_symbol,
+        "win_symbol": matched_win_symbol,
         "win_function": matches[0],
         "linux_function": linux_function,
         "matched_params": matched_params,
@@ -171,6 +174,10 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     
 generator = HeaderGenerator.HeaderGenerator(class_name, matched_vtable)
 header = generator.to_header()
+asm = generator.to_asm()
 
 with open(amethyst_folder + "generated_header.h", "w") as file:
     file.write(header)
+    
+with open(amethyst_folder + "generated_assembly.asm", "w") as file:
+    file.write(asm)
