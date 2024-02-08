@@ -14,7 +14,3 @@ enums = set()
 structs = set()
 
 get_all_types_used(function, classes, structs, enums)
-
-print(list(classes))
-print(list(enums))
-print(list(structs))

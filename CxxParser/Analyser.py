@@ -192,9 +192,6 @@ def get_all_types_used(parsed_function, classes: set, structs: set, enums: set):
                 
             else:
                 classes.add(type_to_raw(parsed_function))
-                
-    print()
-    print("parsed_func", parsed_function)
     
     if "body" in parsed_function:
         get_all_types_used(parsed_function["body"], classes, structs, enums)

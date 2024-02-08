@@ -83,7 +83,6 @@ for entry in win_data_dump:
     symbol_name = entry["symbol"]
     
     demangled_name: str | None = api.demangle_name(symbol_name, 0)
-    print(demangled_name)
     
     if demangled_name is None:
         print(f"IDA failed to demangle {symbol_name}")
@@ -122,8 +121,6 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     linux_name = Analyser.function_name(linux_function)
     linux_parameters = Analyser.simplify_parameters(Analyser.parameter_types(linux_function))
     
-    print(f"{linux_name}({', '.join(linux_parameters)})")
-    
     matches = []
     
     for (win_symbol, win_demangled, win_function) in win_class_items:
@@ -147,11 +144,15 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     matched_params = []
     found_params = False
     
+    name_matched_params = []
+    
     for (named_function, param_names) in named_items:
         function_name = Analyser.function_name(named_function)
         
         if function_name == linux_name:
             function_params = Analyser.simplify_parameters(Analyser.parameter_types(named_function))
+            
+            name_matched_params.append((function_params, param_names))
             
             if linux_parameters == function_params:
                 matched_params = param_names
@@ -163,8 +164,9 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
         "symbol": win_symbol,
         "win_function": matches[0],
         "linux_function": linux_function,
-        "param_names": matched_params,
-        "found_params": found_params
+        "matched_params": matched_params,
+        "found_params": found_params,
+        "named_matched_params": name_matched_params
     })
     
 generator = HeaderGenerator.HeaderGenerator(class_name, matched_vtable)

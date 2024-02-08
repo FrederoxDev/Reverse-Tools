@@ -1,6 +1,32 @@
 from typing import List
 import Analyser
 
+def to_named_params(types, names):
+    formatted_params = []
+                
+    # Don't write the this parameter
+    offset = 0
+    
+    if len(names) == 0:
+        return ", ".join(types)
+    
+    if names[0] == "this":
+        offset = 1
+        
+        if len(names) == 1:
+            return ""    
+    
+                
+    for (index, param) in enumerate(types):
+        formatted = param
+                    
+        if names[index + offset] != "":
+            formatted += f" {names[index + offset]}"
+                    
+        formatted_params.append(formatted) 
+        
+    return ", ".join(formatted_params)
+
 class HeaderGenerator:
     class_name: str
     vtable_entries: List[dict]
@@ -29,38 +55,38 @@ class HeaderGenerator:
                 continue
             
             did_match_params = entry["found_params"]
-            param_names = entry["param_names"]
+            param_names = entry["matched_params"]
+            name_matches = entry["named_matched_params"]
             win_function = entry["win_function"]
-            linux_function = entry["linux_function"]
             
             Analyser.get_all_types_used(win_function, classes, structs, enums)
-            function_params = Analyser.parameter_types(win_function)
+            function_params = Analyser.simplify_parameters(Analyser.parameter_types(win_function))
             function_name = Analyser.function_name(win_function)
-            function_return = Analyser.return_type(win_function)
+            function_return = Analyser.simplify_parameters([Analyser.return_type(win_function)])[0]
             
-            formatted_params = function_params
+            formatted_params = ', '.join(function_params)
             
             # Don't bother to do params for functions with no params
             if function_params == ["void"]:
-                formatted_params = []
+                formatted_params = ""
             
             elif did_match_params:
-                formatted_params = []
-                
-                # Don't write the this parameter
-                offset = 0
-                if param_names[0] == "this":
-                    offset = 1
-                
-                for (index, param) in enumerate(function_params):
-                    formatted = param
+                formatted_params = to_named_params(function_params, param_names)
+                       
+            if not did_match_params:
+                known_options_str = ", known options:"
+                if len(name_matches) == 0:
+                    known_options_str = ""
                     
-                    if param_names[index + offset] != "":
-                        formatted += f" {param_names[index + offset]}"
+                h += f"\n\t// Unknown Parameters{known_options_str}\n"
+                
+                for name_match in name_matches:
+                    h += f"\t// ({to_named_params(name_match[0], name_match[1])})\n"
                     
-                    formatted_params.append(formatted) 
-            
-            h += f"\tvirtual {function_return} {function_name}({', '.join(formatted_params)});\n"
+                h += f"\tvirtual {function_return} {function_name}({formatted_params});\n\n"
+                
+            else:
+                h += f"\tvirtual {function_return} {function_name}({formatted_params});\n"
             
         h += "};"
         
