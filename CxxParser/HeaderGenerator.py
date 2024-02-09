@@ -45,7 +45,8 @@ class HeaderGenerator:
         enums = set()
         
         h += f"class {self.class_name} {'{'}\n"
-        h += "public:\n"
+        
+        last_publicity = None
         
         for entry in self.vtable_entries:
             was_success = entry["success"]
@@ -59,6 +60,11 @@ class HeaderGenerator:
             param_names = entry["matched_params"]
             name_matches = entry["named_matched_params"]
             win_function = entry["win_function"]
+            publicity = win_function["publicity"]
+            
+            if publicity != last_publicity:
+                h += f"{publicity}:\n"
+                last_publicity = publicity
             
             Analyser.get_all_types_used(win_function, classes, structs, enums)
             function_params = Analyser.simplify_parameters(Analyser.parameter_types(win_function))
@@ -128,7 +134,6 @@ class HeaderGenerator:
             
             for entry in self.vtable_entries:
                 name = Analyser.function_name(entry["linux_function"])
-                print(name)
                 
                 if name == prev_name:
                     consecutive.append(entry)

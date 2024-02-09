@@ -12,5 +12,3 @@ function = parser.parse()
 classes = set()
 enums = set()
 structs = set()
-
-print(function)

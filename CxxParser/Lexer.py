@@ -59,7 +59,7 @@ class Lexer:
 
             # No rule to match
             else: 
-                # print(f"Skipping {self.text[self.idx]}")
+                print(f"Lexer Skipping '{self.text[self.idx]}'")
                 self.idx += 1
 
         return self.tokens
