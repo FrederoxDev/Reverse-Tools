@@ -76,26 +76,6 @@ while start < finish:
         print(demangled_name)
         exit(1)
     
-# Reverse the order of overloads from linux vtable
-unordered_vtable_items = linux_vtable_items
-linux_vtable_items = []
-prev_name = None
-consecutive = []
-
-for (symbol_name, demangled_name, function) in unordered_vtable_items:
-    name = Analyser.function_name(function)
-    
-    if name == prev_name:
-        consecutive.append((symbol_name, demangled_name, function))
-    else:
-        consecutive.reverse()
-        linux_vtable_items.extend(consecutive)
-        consecutive = [(symbol_name, demangled_name, function)]
-        prev_name = name
-
-consecutive.reverse()
-linux_vtable_items.extend(consecutive)
-    
 # Read symbols from windows BDS
 symbol_dumper_path = "C:/Users/blake/Documents/Reverse-Tools/SymbolDumper/bin/Debug/net8.0/SymbolDumper.exe"
 bds_pdb_path = "C:/Users/blake/Downloads/bedrock-server-1.20.51.01/bedrock_server.pdb"
@@ -168,7 +148,8 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
         print(f"[MATCH FAILED] {linux_name}({', '.join(linux_parameters)}) got {len(matches)} matches!")
         matched_vtable.append({
             "success": False,
-            "linux_symbol": linux_symbol
+            "linux_symbol": linux_symbol,
+            "linux_function": linux_function,
         })
         continue
     
@@ -194,6 +175,7 @@ for (linux_symbol, linux_demangled, linux_function) in linux_vtable_items:
     matched_vtable.append({
         "success": True,
         "linux_symbol": linux_symbol,
+        "linux_function": linux_function,
         "win_symbol": matched_win_symbol,
         "win_function": matches[0],
         "linux_function": linux_function,
