@@ -5,7 +5,6 @@ from Lexer import Lexer
 from Parser import Parser
 import Analyser
 import idaapi
-import ida_funcs
 import idautils
 import idc
 import json
@@ -57,7 +56,6 @@ for func_ea in all_functions:
         data[class_name][demangled] = param_names
         
     except:
-        # print("Failed", demangled)
         pass
         
 amethyst_folder = os.environ.get("amethyst") + "/tools/"
