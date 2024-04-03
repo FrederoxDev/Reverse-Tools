@@ -78,7 +78,7 @@ while start < finish:
     
 # Read symbols from windows BDS
 symbol_dumper_path = "C:/Users/blake/Documents/Reverse-Tools/SymbolDumper/bin/Debug/net8.0/SymbolDumper.exe"
-bds_pdb_path = "C:/Users/blake/Downloads/bedrock-server-1.20.51.01/bedrock_server.pdb"
+bds_pdb_path = "C:/Users/blake/Downloads/bedrock-server-1.20.72.01/bedrock_server.pdb"
 
 result = subprocess.run(
     [symbol_dumper_path, bds_pdb_path, class_name], 

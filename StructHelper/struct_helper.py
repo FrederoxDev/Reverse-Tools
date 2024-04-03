@@ -1,14 +1,17 @@
-struct = [
-    # Type, Name, Size (bytes), Offset (bytes)
-    ("BurnOdds", "mBurnOdds", 1, 95),
-    ("FlameOdds", "mFlameOdds", 1, 94),
-    ("bool", "mIsVanilla", 1, 544),
-    ("const Material&", "mMaterial", 8, 296),
-    ("unsigned short", "mID", 2, 422)
-]
-
 is_virtual = True
-struct_size = 844
+hide_vtable = False
+struct_size = 3232
+
+# (Type, Name, Size (in bytes), Offset (in bytes))
+struct = [
+("MinecraftGame*", "minecraftGame", 8, 200),
+("Minecraft*", "minecraft", 8, 208),
+("ClientInputHandler*", "inputHandler", 8, 272),
+("ItemRenderer*", "itemRenderer", 8, 1360),
+("GuiData*", "guiData", 8, 1368),
+("mce::Camera", "camera", 512, 624),
+("BlockTessellator*", "mBlockTessellator", 8, 1320)
+]
 
 struct_layout = [None] * struct_size
 
@@ -33,14 +36,14 @@ def write_field():
     padded_offset = str(start_offset).ljust(len(str(struct_size)), " ")
     
     if last_item == None:
-        stringified += f"/* this + {padded_offset} */ std::byte padding{padding_index}[{size_count}];\n"
+        stringified += f"/* this + {padded_offset} */ std::byte padding{start_offset}[{size_count}];\n"
         padding_index += 1
                 
     else:
         stringified += f"/* this + {padded_offset} */ {last_item[0]} {last_item[1]};\n"
 
 vtable_offset = 0
-if is_virtual:
+if is_virtual and hide_vtable:
     vtable_offset = 8
 
 for i in range(vtable_offset, len(struct_layout)):

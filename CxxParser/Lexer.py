@@ -7,7 +7,7 @@ in_identifier_rule = r'[a-zA-Z_~0-9]\w*$'
 symbol_rule = r'[.,<>():*&]'
 keywords = ["virtual", "static", "const", "class", "struct", "enum", "unsigned", "public", "private", "protected",
             "__thiscall", "__fastcall"
-            ]
+]
 
 class Lexer:
     idx: int
@@ -59,7 +59,7 @@ class Lexer:
 
             # No rule to match
             else: 
-                print(f"Lexer Skipping '{self.text[self.idx]}'")
+                # print(f"Lexer Skipping '{self.text[self.idx]}'")
                 self.idx += 1
 
         return self.tokens
