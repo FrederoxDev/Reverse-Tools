@@ -1,7 +1,7 @@
-import idaapi as api
-import idautils as utils
-import ida_name as idaname
-import idc as idc
+import idaapi
+import idautils 
+import ida_name
+import idc
 import json
 import os
 import subprocess
@@ -11,23 +11,23 @@ import Lexer
 import Parser
 import Analyser
 import HeaderGenerator
-api.require("Analyser")
-api.require("Lexer")
-api.require("Parser")
-api.require("HeaderGenerator")
+idaapi.require("Analyser")
+idaapi.require("Lexer")
+idaapi.require("Parser")
+idaapi.require("HeaderGenerator")
 
 amethyst_folder = os.environ.get("amethyst") + "/tools/"
 
 asm_path = amethyst_folder + "vtable.asm"
 cxx_path = amethyst_folder + "vtable.h"
 
-names = dict(utils.Names())
+names = dict(idautils.Names())
 selection = idc.read_selection_start()
-idaname.NearestName(names)
+ida_name.NearestName(names)
 
-address, n, pos = idaname.NearestName(names).find(selection)
+address, n, pos = ida_name.NearestName(names).find(selection)
 
-class_name = api.demangle_name(n, 0)[12:]
+class_name = idaapi.demangle_name(n, 0)[12:]
 print("Dumping vtable for: " + class_name)
 
 if address > selection:
@@ -52,7 +52,7 @@ while start < finish:
     if symbol_name == "":
         continue
     
-    demangled_name: str | None = api.demangle_name(symbol_name, 0)
+    demangled_name: str | None = idaapi.demangle_name(symbol_name, 0)
     
     if demangled_name is None:
         print(f"IDA failed to demangle {symbol_name}")
@@ -92,7 +92,7 @@ win_class_items = []
 for entry in win_data_dump:
     symbol_name = entry["symbol"]
     
-    demangled_name: str | None = api.demangle_name(symbol_name, 0)
+    demangled_name: str | None = idaapi.demangle_name(symbol_name, 0)
     
     if demangled_name is None:
         print(f"IDA failed to demangle {symbol_name}")
