@@ -24,8 +24,9 @@ class ItaniumParser:
             r.append(str(name))
             
         return r
-    
-def get_vtables() -> List[tuple[int, str]]:
+ 
+# Pass idautils.Names() as the first parameter. It only needs to be determined once.
+def get_vtables() -> List[tuple[int, str, str]]:
     vtables = []
     
     for (address, mangled_name) in idautils.Names():
@@ -39,6 +40,6 @@ def get_vtables() -> List[tuple[int, str]]:
             if not "`vtable" in demangled_name:
                 raise Exception("Expected to only find vtables.")
             
-            vtables.append((address, demangled_name))
+            vtables.append((address, mangled_name, demangled_name))
             
     return vtables
