@@ -6,7 +6,6 @@ import idc
 import sys
 import json
 import os
-sys.path.append("../Reverse-Tools/CxxParser/")
 sys.path.append("../Reverse-Tools/Common/")
 import Itanium
 import Common
@@ -37,7 +36,7 @@ for (index, (vtable_ea, vtable_mangled, _)) in enumerate(linux_vtables):
     vtable_data[class_name] = []
         
     # Get each function within the vtable        
-    for func_ea in Common.get_vtable_entries(names, vtable_ea):
+    for func_ea in Itanium.get_vtable_entries(names, vtable_ea):
         symbol_name = idc.get_func_name(func_ea)
         vtable_data[class_name].append(symbol_name)     
 
