@@ -6,6 +6,7 @@ class Itanium:
     symbol: str
 
     def __init__(self, symbol: str) -> None:
+        print(f"Parsing {symbol}")
         self.symbol = symbol
         self.pos = 0
         
@@ -23,7 +24,7 @@ class Itanium:
             if not current.startswith(values):
                 return None
             
-            if self.pos + len(values) >= len(self.symbol):
+            if self.pos + len(values) > len(self.symbol):
                 return None
             
             self.pos += len(values)
@@ -80,7 +81,11 @@ class Itanium:
         if complete_object_ctor:
             return "base_object_constructor"
         
-        not_implemented = self.try_consume(["C1", "C3", "CI1", "CI2", "D0", "D1", "D2"])
+        base_object_destructor = self.try_consume("D2")
+        if base_object_destructor:
+            return "base_object_destructor"
+        
+        not_implemented = self.try_consume(["C1", "C3", "CI1", "CI2", "D0", "D1"])
         if not_implemented:
             self.error(f"{not_implemented} has not been implemented!")
             
@@ -125,7 +130,21 @@ class Itanium:
     #          ::= <decltype>                         # decltype qualifier
 	#          ::= <substitution>
     def parse_prefix(self):
-        return self.parse_unqualified_name()
+        unquialified_name = self.parse_unqualified_name()
+        if unquialified_name:
+            print("unqu", unquialified_name) 
+            return unquialified_name
+        
+        p = self.pos
+        
+        prefix = self.parse_prefix()
+        if prefix:
+            print("prefix")
+            unq = self.parse_unqualified_name()
+            if unq: return unq
+            self.pos = p
+            
+        self.error("<prefix> unhandled")
     
     # <nested-name> ::= N [<CV-qualifiers>] [<ref-qualifier>] <prefix> <unqualified-name> E
     # 		        ::= N [<CV-qualifiers>] [<ref-qualifier>] <template-prefix> <template-args> E
@@ -135,6 +154,8 @@ class Itanium:
         
         prefix = self.parse_prefix()
         if prefix:
+            print("found prefix")
+            print(prefix)
             nested_name = self.parse_unqualified_name()
             
             e = self.try_consume("E")
@@ -142,6 +163,7 @@ class Itanium:
                 self.error("Expected E at the end of <nested-name>")
                 
             return {
+                "type": "nested_name",
                 "cv_qualifiers": cv_qualifiers,
                 "ref_qualifier": ref_qualifier,
                 "prefix": prefix,
@@ -332,8 +354,6 @@ class Itanium:
         class_enum = self.parse_class_enum_type()
         if class_enum: return class_enum
         
-        print("hi")
-        
         if self.try_consume("R"):
             return {
                 "type": "lvalue",
@@ -345,13 +365,7 @@ class Itanium:
     # <bare-function-type> ::= <signature type>+
     def parse_bare_function_type(self):
         types = []
-        
-        print("About to call parse_type")
-        self.log_remaining()
-        
         first = self.parse_type()
-        print("first")
-        print(first)
         
         if not first:
             return None
@@ -359,7 +373,6 @@ class Itanium:
         types.append(first)
         
         while True:
-            print("parsing type for bare")
             type = self.parse_type()
             if not type:
                 break
@@ -407,11 +420,10 @@ class Itanium:
         
         return encoding
         
-# result = Itanium("_ZN11BlockLegacyC2ERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEiRK8Material").parse_mangled_name()
 itanium = None
 
 try:
-    itanium = Itanium("_ZN11JsonHelpers16getFieldAsObjectERKN4Json5ValueERKNSt3__112basic_stringIcNS4_11char_traitsIcEENS4_9allocatorIcEEEE")
+    itanium = Itanium("_ZN3mce4Math11clampedLerpEfff")
     result = itanium.parse_mangled_name()
     print(json.dumps(result))
     
