@@ -1,1 +1,0 @@
-{"encoding": {"type": "function_name", "name": null, "bare_function_type": [{"type": "class_enum_type", "specifier": "non_dependant", "name": "mce"}, {"type": "class_enum_type", "specifier": "non_dependant", "name": "Math"}, {"type": "class_enum_type", "specifier": "non_dependant", "name": "clampedLerp"}]}}

@@ -1,19 +1,23 @@
+from typing import List
 import idaapi
 import idautils 
 import ida_name
 import idc
 import sys
 sys.path.append("../Reverse-Tools/CxxParser/")
+sys.path.append("../Reverse-Tools/Common/")
+import Itanium
 
-for (address, name) in idautils.Names():
-    name: str
-    if name.startswith("_ZTV"):
-        demangled_name: str | None = idaapi.demangle_name(name, 0)
-        
-        if demangled_name == None:
-            continue
-        
-        if not "`vtable" in demangled_name:
-            print(demangled_name)
-            
-print("Done")
+targets = [
+    {
+        "path": "src/common/world/level/BlockSource.hpp",
+        "class_name": "BlockSource"
+    }
+]
+
+linux_vtables = Itanium.get_vtables()        
+print(f"Loaded {len(linux_vtables)} vtables.")
+
+for (ea, name) in linux_vtables:
+    if "`vtable for'BlockSource" == name:
+        print(ea, name)

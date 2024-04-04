@@ -1,6 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "./CxxParser"
+        "./CxxParser",
+        "./SymbolParser",
+        "./Common",
+        "./Shared"
     ],
     "files.exclude": {
         "**/.git": true,
