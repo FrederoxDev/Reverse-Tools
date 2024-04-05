@@ -21,17 +21,31 @@ catch {
     return -2;
 }
 
-List<DumpedFuncInfo> dataToDump = [];
+OutputData data = new OutputData();
 
 foreach (var symbol in reader.PublicSymbols)
 {
-    DumpedFuncInfo dumpedFuncInfo = new(symbol.Name, symbol.RelativeVirtualAddress);
-    dataToDump.Add(dumpedFuncInfo);
+    ulong basedAddress = 0x140000000 + symbol.RelativeVirtualAddress;
+
+    if(!data.address_to_symbols.ContainsKey(basedAddress))
+    {
+        data.address_to_symbols.Add(basedAddress, new List<string>());
+    }
+
+    data.address_to_symbols[basedAddress].Add(symbol.Name);
+
+    string demangled = symbol.GetUndecoratedName();
+    if (demangled.Contains("`vftable'"))
+    {
+        SymbolInfo symbolInfo = new(symbol.Name, demangled, basedAddress);
+        data.vtables.Add(symbolInfo);
+    }
 }
 
 var jsonWriteOptions = new JsonSerializerOptions
 {
     WriteIndented = true,
+    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 };
 
 string amethystPath = Environment.GetEnvironmentVariable("Amethyst");
@@ -45,7 +59,7 @@ string outputPath = Path.Combine(amethystPath, "tools", "server_symbols.json");
 
 try
 {
-    var jsonString = JsonSerializer.Serialize(dataToDump, jsonWriteOptions);
+    var jsonString = JsonSerializer.Serialize(data, jsonWriteOptions);
     File.WriteAllText(outputPath, jsonString);
     Console.WriteLine($"JSON data saved to {outputPath}");
 }
@@ -57,14 +71,26 @@ catch (Exception ex)
 
 return 0;
 
-struct DumpedFuncInfo
+struct OutputData
+{
+    public Dictionary<ulong, List<string>> address_to_symbols { get; set; } = [];
+    public List<SymbolInfo> vtables { get; set; } = [];
+
+    public OutputData() {}
+}
+
+struct SymbolInfo
 {
     public string symbol { get; set; }
+    public string demangled {  get; set; }
     public ulong address { get; set; }
 
-    public DumpedFuncInfo(string symbol, ulong address)
+    public SymbolInfo(string symbol, string demangled_name, ulong address)
     {
         this.symbol = symbol;
+        this.demangled = demangled_name;
         this.address = address;
     }
+
+    
 };
