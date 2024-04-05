@@ -1,5 +1,5 @@
 from typing import List
-from itanium_demangler import parse, Node, FuncNode
+from itanium_demangler import QualNode, parse, Node, FuncNode
 import idautils 
 import idaapi
 import idautils 
@@ -27,6 +27,15 @@ class ItaniumParser:
             r.append(str(name))
             
         return r
+    
+    def function_name(self) -> str:
+        name_node: Node = self.func.name
+        
+        if name_node.kind == "cv_qual":
+            name_node = name_node.value
+            
+        return str(name_node.value[len(name_node.value) - 1])
+    
     
 # Pass dict(idautils.Names()) as the first parameter. It only needs to be determined once.
 def get_vtable_entries(names, vtable_ea: int):
@@ -59,3 +68,10 @@ def get_vtables() -> List[tuple[int, str, str]]:
             vtables.append((address, mangled_name, demangled_name))
             
     return vtables
+
+def convert_to_win_order(vtable_symbols):
+    filtered = []
+    
+    for symbol in vtable_symbols:
+        name = ItaniumParser(symbol).function_name()
+        print(name)
