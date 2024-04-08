@@ -48,5 +48,5 @@ dumped_data = {
     "dependencies": dependencies
 }
     
-print("Saving")
+print(f"Writing inheritance and vtable data to: \n\t{inheritance_file}")
 Common.write_json(inheritance_file, dumped_data)

@@ -43,4 +43,4 @@ def get_vtable_by_name(all_vtables, target_name):
         if name == f"const {target_name}::`vftable'":
             return vtable_ea
         
-    raise Exception(f"Failed to find vftable for {target_name}")
+    return None
