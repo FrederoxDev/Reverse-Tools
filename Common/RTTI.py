@@ -2,7 +2,6 @@ import idaapi
 import ida_name
 import idc
 import sys
-import json
 sys.path.append("../Reverse-Tools/Common/")
 import Itanium
 idaapi.require("Itanium")
@@ -39,8 +38,8 @@ def get_typeinfo(typeinfo_ea):
         }
         
     # The class inherits from multiple things at once
-    # class name (8B):                              +8
-    # count_of_base_classes(4B), attribute(4B):     +16
+    # class name (8B):                          +8
+    # count_of_base_classes(4B), attribute(4B): +16
     elif rtti_type == "`vtable for'__cxxabiv1::__vmi_class_type_info":
         name_ea = idc.get_qword(typeinfo_ea + 8)
         base_class_count = (idc.get_qword(typeinfo_ea + 16) & 0xFFFFFFFF00000000) >> 32
@@ -68,3 +67,23 @@ def get_typeinfo(typeinfo_ea):
     
     else:
         raise Exception(f"Unexpected RTTI Type {rtti_type}")
+    
+def is_class_a_parent(typeinfo, class_name, dependencies_set: set):
+    type = typeinfo["inheritance_type"]
+    name = typeinfo["name"]
+    
+    if name == class_name:
+        return True
+    
+    if type == "single":
+        if is_class_a_parent(typeinfo["parent"], class_name, dependencies_set):
+            dependencies_set.add(name)
+            return True
+        
+    if type == "multiple":
+        for base in typeinfo["base_classes"]:
+            if is_class_a_parent(base["base_class"], class_name, dependencies_set):
+                dependencies_set.add(name)
+                return True
+            
+    return False

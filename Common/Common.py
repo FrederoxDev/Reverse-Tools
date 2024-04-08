@@ -13,6 +13,10 @@ def load_json(file_path):
     
     with open(file_path, "r") as file:
         return json.loads(file.read())
+    
+def write_json(file_path, obj):    
+    with open(file_path, "w") as file:
+        file.write(json.dumps(obj, indent=4))
 
 def read_str_from_ea(str_ea) -> str:
     bytes = ida_bytes.get_strlit_contents(str_ea, -1, ida_nalt.STRTYPE_C)
