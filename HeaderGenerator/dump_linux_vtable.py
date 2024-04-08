@@ -17,8 +17,6 @@ idaapi.require("RTTI")
 tools_folder = os.path.join(os.environ.get("amethyst"), "tools")
 inheritance_file = os.path.join(tools_folder, "inheritance.json")
 
-print(inheritance_file)
-
 all_vtables = Itanium.get_vtables()
 typeinfo = []
 

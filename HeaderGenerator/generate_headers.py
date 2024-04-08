@@ -21,6 +21,8 @@ idaapi.require("Parser")
 
 # This needs to do an initial pass and fill in the spaces which we defintely know there is only 1 symbol
 # From there we can do another pass using the set of remaining virtual symbols for the class to see if we can get anymore
+# We repeat this pass until a pass makes 0 changes.
+
 # After that pass, check for any classes which inherit out class and see if they override the function we are looking at
 # We can also do an overlap check between the functions remaining in our class set and the ones in that other classes set
 # to help rule out more options. To do that we need a function to get all the possible choices for a vtable entry
@@ -37,63 +39,68 @@ names = dict(idautils.Names())
 windows_vtables = []
 loaded_data = {}
 
-def try_get_virtual_directly(class_name, v_index):
-    vtable_ea = x86_64.get_vtable_by_name(windows_vtables, class_name)
-    if not vtable_ea: return None
-     
-    vtable_entries = x86_64.get_vtable_entries(names, vtable_ea)
+def get_virtual_func_set(class_name):
+    virtual_set = set()
     
-    address = vtable_entries[v_index]
-    symbols = win_server_data["address_to_symbols"][str(address)]
-    filtered_symbols = []
-    
-    # Only look for symbols that are virtual and can be demangled
-    for symbol in symbols:
-        demangled_name: str | None = idaapi.demangle_name(symbol, 0)
-        if not demangled_name: continue
-        
-        if "virtual " in demangled_name and f"@{class_name}@@" in symbol:
-            filtered_symbols.append(symbol)
+    for address in win_server_data["address_to_symbols"]:
+        for symbol in win_server_data["address_to_symbols"][address]:
+            if not f"@{class_name}@@" in symbol: continue
+             
+            demangled: str | None = idaapi.demangle_name(symbol, 0)
+            if not "virtual " in demangled: continue
             
-    # If we are down to 1 symbol, return that
-    if len(filtered_symbols) == 1: return filtered_symbols[0]
-    
-    # Else check for any classes which override the function and use that to find a name
-    # for child_class in linux_server_data["dependencies"][class_name]:
-    #     child_symbol = try_get_virtual_directly(child_class, v_index)
-    #     if child_symbol: return child_symbol
-    
-    return None
-    
+            virtual_set.add(symbol)
+            
+    return virtual_set
 
 # Vtable names need to be loaded externally, IDA can only read one symbol for an address.
 # Read the data and reformat slightly to be easier to work with.
 for vtable in win_server_data["vtables"]:
     windows_vtables.append((vtable["address"], vtable["symbol"], vtable["demangled"]))
 
-print(f"Loaded {len(windows_vtables)} vtables")
-
-found = 0
-total = 0
-
 # Read in any data needed and store the information needed for each file
 for target in targets:
     file_path = target.get("filepath")
     classes = target.get("classes")
     
-    loaded_data[file_path] = []
-    
     for class_name in classes:
         windows_vtable_ea = x86_64.get_vtable_by_name(windows_vtables, class_name)
         windows_vtable_entries = x86_64.get_vtable_entries(names, windows_vtable_ea)
         
-        windows_vtable = []
-        for (index, func_ea) in enumerate(windows_vtable_entries):
-            total += 1
-            direct_symbol = try_get_virtual_directly(class_name, index)
-            print(direct_symbol)
+        # Make a set of all possible options
+        # Iterate through each entry and check for symbols with 1 match
+        # Keep doing passes through until a pass is made with 0 changes
+        vtable_set = get_virtual_func_set(class_name)
+        
+        # (Found, set options)
+        final_vtable = [(False, None)] * len(windows_vtable_entries) 
+        
+        while True:
+            made_changes_this_pass = False
             
-            if direct_symbol is not None:
-                found += 1
+            for (index, ea) in enumerate(windows_vtable_entries):                
+                # If the symbol has already been found skip
+                if final_vtable[index][0]: continue
                 
-print(f"Found {found} out of {total}")
+                options = set(win_server_data["address_to_symbols"][str(ea)])
+                intersection = options & vtable_set
+                
+                if len(intersection) == 1:
+                    choice = list(intersection)[0]
+                    vtable_set.remove(choice)
+                    
+                    final_vtable[index] = (True, intersection)
+                    made_changes_this_pass = True
+                    
+                else:
+                    final_vtable[index] = (False, intersection)
+            
+            # Nothing changed this pass so move onto the next steps
+            if not made_changes_this_pass:
+                break    
+            
+        count = 0
+        for (found, _) in final_vtable:
+            if found: count += 1
+            
+        print(f"Pass 1: {count} / {len(final_vtable)}")
