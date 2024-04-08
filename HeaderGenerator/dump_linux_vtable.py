@@ -9,39 +9,15 @@ import os
 sys.path.append("../Reverse-Tools/Common/")
 import Itanium
 import Common
+import RTTI
 idaapi.require("Itanium")
 idaapi.require("Common")
+idaapi.require("RTTI")
+import ida_typeinf
 
-names = dict(idautils.Names())
-linux_vtables = Itanium.get_vtables()        
+vtables = Itanium.get_vtables()
 
-out_path = os.environ.get("amethyst") + "/tools/linux_vtable.json"    
-
-vtable_data = {}
-
-for (index, (vtable_ea, vtable_mangled, _)) in enumerate(linux_vtables):
-    name = None
+for (vtable_ea, _, vtable_name) in vtables:
+    type_info_ea = idc.get_qword(vtable_ea + 8)
+    print(json.dumps(RTTI.get_typeinfo(type_info_ea)) + "\n\n")
     
-    # Try parse the vtable name
-    try: name = Itanium.ItaniumParser(vtable_mangled).func
-    except: continue
-    
-    if name == None: continue
-    
-    class_name = str(name[1])
-    
-    if class_name.startswith("std::"):
-        continue
-    
-    vtable_data[class_name] = []
-        
-    # Get each function within the vtable        
-    for func_ea in Itanium.get_vtable_entries(names, vtable_ea):
-        symbol_name = idc.get_func_name(func_ea)
-        vtable_data[class_name].append(symbol_name)     
-
-# Write data out to file
-print(f"Dumped {len(vtable_data)} vtables. Saving to {out_path}")
-        
-with open(out_path, "w") as file:
-    file.write(json.dumps(vtable_data, indent=4))

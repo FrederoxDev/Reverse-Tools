@@ -5,6 +5,8 @@ import idaapi
 import idautils 
 import ida_name
 import idc
+import ida_bytes
+import ida_nalt
 
 class ItaniumParser:
     func: FuncNode
@@ -75,3 +77,10 @@ def convert_to_win_order(vtable_symbols):
     for symbol in vtable_symbols:
         name = ItaniumParser(symbol).function_name()
         print(name)
+        
+        
+def read_type_name(ea) -> str:
+    mangled_name = ida_name.get_name(ea)
+    demangled_name: str | None = idaapi.demangle_name(mangled_name, 0)
+    
+    return demangled_name.replace("`typeinfo name for'", "")
