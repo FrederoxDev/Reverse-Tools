@@ -72,6 +72,12 @@ def direct_pass(class_name):
             # If the symbol has already been found skip
             if final_vtable[index][0]: continue
                 
+            # This is probably an alignment
+            if ea == 0 or ea == 5394372944:
+                print(class_name, index)
+                final_vtable[index] = (False, set())
+                continue
+            
             options = set(win_server_data["address_to_symbols"][str(ea)])
             intersection = options & vtable_set
                 
@@ -99,6 +105,17 @@ def direct_pass(class_name):
         "remaining_set": vtable_set,
         "final_vtable": final_vtable
     }
+
+def propagate_down(child_class_name: str, child_symbol: str, class_name: str, class_options: list):
+    unnamed_symbol = child_symbol.replace(f"@{child_class_name}@@", "@", 1)
+    
+    for opt in class_options:
+        unnamed_class_symbol = opt.replace(f"@{class_name}@@", "@", 1)
+        
+        if unnamed_symbol == unnamed_class_symbol:
+            return opt
+        
+    return None
 
 # Vtable names need to be loaded externally, IDA can only read one symbol for an address.
 # Read the data and reformat slightly to be easier to work with.
@@ -137,8 +154,21 @@ for target in targets:
                     
                 # Progagate the symbol downwards.
                 elif entry[0] == True:
-                    print(entry[1], "needs to be propagated downwards")
-                    print(matching_entry[1])
-                    print("\n")
+                    result = propagate_down(dependant_class, list(entry[1])[0], class_name, list(matching_entry[1]))
+                    
+                    if result is not None:
+                        results[class_name]["final_vtable"][index] = [True, set([result])]
+            
+for target in targets:
+    count = 0
+    classes = target.get("classes")
+    
+    for class_name in classes:
+        vtable = results[class_name]["final_vtable"]
+        
+        for (found, symbols) in vtable:
+            if found: count += 1
+            
+        print(f"Progagation Pass for {class_name}: {count} / {len(vtable)}")            
             
 Common.write_json(os.path.join(tools_folder, "res.json"), results)
