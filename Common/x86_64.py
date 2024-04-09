@@ -5,6 +5,7 @@ import idaapi
 import idautils 
 import ida_name
 import idc
+import ida_offset
 
 def get_vtables() -> List[tuple[int, str, str]]:
     vtables = []
@@ -33,6 +34,13 @@ def get_vtable_entries(names, vtable_ea: int):
     entries = []
     
     for address in range(vtable_ea, last_entry_ea, 8):
+        # Check for any alignments
+        if ida_offset.get_offbase(address, -1) != 0:
+            break
+        
+        if idaapi.get_name(address) != "" and address != vtable_ea: 
+            break
+        
         ea = idc.get_qword(address)
         entries.append(ea)
 

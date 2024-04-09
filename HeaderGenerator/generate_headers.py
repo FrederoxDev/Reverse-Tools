@@ -130,7 +130,8 @@ for target in targets:
     classes = target.get("classes")
     
     for class_name in classes:
-        results[class_name] = direct_pass(class_name)
+        if class_name not in results:
+            results[class_name] = direct_pass(class_name)
         
         # Look at the classes which extend our class and see if they override any functions we don't have yet.
         dependant_classes = linux_server_data["dependencies"][class_name]
@@ -143,6 +144,8 @@ for target in targets:
         # Propagate symbols.
         for dependant_class in dependant_classes:
             for (index, entry) in enumerate(results[dependant_class]["final_vtable"]):
+                # Check we are in the bounds of our vtable
+                if index > len(results[class_name]["final_vtable"]) - 1: break
                 matching_entry = results[class_name]["final_vtable"][index]
                 
                 # Neither of the classes have found what we are looking for
