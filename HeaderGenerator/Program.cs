@@ -4,12 +4,15 @@ using System.Diagnostics;
 internal class Program {
     public static Dictionary<ulong, List<string>> gAddressToSymbols = [];
     public static Dictionary<string, WindowsVtable> gWindowsVtables = [];
+    public static Dictionary<string, List<string>> gDependencies = [];
+    public static Dictionary<string, Target> gTargets = [];
 
     static void Main(string[] args)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 
+        LoadLinuxData();
         LoadWindowsVtables();
         LoadWindowsSymbols();
 
@@ -18,14 +21,11 @@ internal class Program {
 
         stopwatch.Restart();
 
-        HeaderGenerator headerGenerator = new HeaderGenerator(
-            gWindowsVtables,
-            gAddressToSymbols
-        );
+        HeaderGenerator headerGenerator = new HeaderGenerator();
 
         headerGenerator.Generate();
         stopwatch.Stop();
-        Console.WriteLine($"First pass: {stopwatch.Elapsed.TotalSeconds}s total, {stopwatch.Elapsed.TotalMilliseconds / 277.0f}ms each");
+        Console.WriteLine($"First pass: {stopwatch.Elapsed.TotalSeconds}s total, {stopwatch.Elapsed.TotalMilliseconds / gTargets.Count}ms each");
 
         Console.ReadLine();
     }
@@ -43,7 +43,10 @@ internal class Program {
             var entries = entry.Value!["entries"]!.ToObject<List<ulong>>()!;
             var symbol_set = entry.Value!["virtual_symbol_set"]!.ToObject<HashSet<string>>()!;
 
-            gWindowsVtables[className] = new(className, address, entries, symbol_set);
+            List<string> dependencies;
+            if (!gDependencies.TryGetValue(className, out dependencies)) continue;
+
+            gWindowsVtables[className] = new(className, address, entries, symbol_set, dependencies);
         }
     }
 
@@ -58,6 +61,19 @@ internal class Program {
             ulong symbolAddress = ulong.Parse(entry.Key);
             List<string> symbols = entry.Value!.ToObject<List<string>>()!;
             gAddressToSymbols.Add(symbolAddress, symbols);
+        }
+    }
+
+    static void LoadLinuxData()
+    {
+        string json = File.ReadAllText("C:/Users/blake/AppData/Roaming/Amethyst/tools/inheritance.json");
+        JObject jsonObject = JObject.Parse(json);
+        JObject dependencies = jsonObject["dependencies"]!.ToObject<JObject>()!;
+
+        foreach (var entry in dependencies)
+        {
+            List<string> symbols = entry.Value!.ToObject<List<string>>()!;
+            gDependencies.Add(entry.Key, symbols);
         }
     }
 }

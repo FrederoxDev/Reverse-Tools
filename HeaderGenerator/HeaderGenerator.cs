@@ -7,314 +7,68 @@ using System.Threading.Tasks;
 
 internal class HeaderGenerator
 {
-    public Dictionary<string, WindowsVtable> mWindowsVtables;
-    public Dictionary<ulong, List<string>> mAddressToSymbols;
-
-    public HeaderGenerator(
-        Dictionary<string, WindowsVtable> windowsVtables, 
-        Dictionary<ulong, List<string>> addressToSymbols
-    ) {
-        mWindowsVtables = windowsVtables;
-        mAddressToSymbols = addressToSymbols;
-    }
+    public HeaderGenerator() {}
 
     public void Generate()
     {
-        List<string> targets = ["CakeBlock",
-            "StonecutterBlock",
-            "FallingBlock",
-            "ChorusPlantBlock",
-            "TripWireHookBlock",
-            "IceBlock",
-            "SandBlock",
-            "ScaffoldingBlock",
-            "CoralFanHang",
-            "VineBlock",
-            "MultifaceBlock",
-            "BuddingAmethystBlock",
-            "WitherRoseBlock",
-            "TwistingVinesBlock",
-            "PowderSnowBlock",
-            "WoolBlock",
-            "CryingObsidianBlock",
-            "MovingBlock",
-            "RedstoneBlock",
-            "CopperBlock",
-            "TallGrassBlock",
-            "CartographyTableBlock",
-            "MangroveRootsBlock",
-            "CoralFan",
-            "InvisibleBlock",
-            "LeavesBlock",
-            "ActorBlock",
-            "EndGatewayBlock",
-            "ConcretePowderBlock",
-            "PistonBlock",
-            "NyliumBlock",
-            "DoublePlantBaseBlock",
-            "CameraBlock",
-            "HangingSignBlock",
-            "StrippedLogBlock",
-            "ChestBlock",
-            "TorchflowerCropBlock",
-            "ChorusFlowerBlock",
-            "InfestedDeepslateBlock",
-            "GlazedTerracottaBlock",
-            "DeadBushBlock",
-            "HopperBlock",
-            "NoteBlock",
-            "CherryLeavesBlock",
-            "AnvilBlock",
-            "CobblestoneBlock",
-            "CoralPlantBlock",
-            "WallBlock",
-            "StoneSlabBlock2",
-            "WebBlock",
-            "WoolCarpetBlock",
-            "BarrierBlock",
-            "DropperBlock",
-            "EndPortalFrameBlock",
-            "LightningRodBlock",
-            "CrafterBlock",
-            "ConduitBlock",
-            "SugarCaneBlock",
-            "BrewingStandBlock",
-            "TorchflowerBlock",
-            "UnderwaterTorchBlock",
-            "StairBlock",
-            "LiquidBlockDynamic",
-            "CutCopperSlab",
-            "ClayBlock",
-            "AirBlock",
-            "SignBlock",
-            "SmokerBlock",
-            "SoulSandBlock",
-            "ComparatorBlock",
-            "BasePressurePlateBlock",
-            "StoneBlock",
-            "SculkCatalystBlock",
-            "MushroomBlock",
-            "ObsidianBlock",
-            "PortalBlock",
-            "LiquidBlockStatic",
-            "OakLeavesBlock",
-            "ThinFenceBlock",
-            "FaceDirectionalActorBlock",
-            "LoomBlock",
-            "HangingRootsBlock",
-            "CarrotBlock",
-            "SaplingBlock",
-            "RespawnAnchorBlock",
-            "UnknownBlock",
-            "FaceDirectionalBlock",
-            "SoulFireBlock",
-            "SporeBlossomBlock",
-            "FlowerBlock",
-            "TntBlock",
-            "NetherSproutsBlock",
-            "WaterlilyBlock",
-            "SculkVeinBlock",
-            "FarmBlock",
-            "StemBlock",
-            "BellBlock",
-            "LodestoneBlock",
-            "TripWireBlock",
-            "WeepingVinesBlock",
-            "CopperDoorBlock",
-            "MudBlock",
-            "GlowItemFrameBlock",
-            "SculkShriekerBlock",
-            "CropBlock",
-            "DirtBlock",
-            "FrostedIceBlock",
-            "PoweredRailBlock",
-            "DragonEggBlock",
-            "ObserverBlock",
-            "HoneyBlock",
-            "BlockLegacy",
-            "BlueIceBlock",
-            "BedrockBlock",
-            "CopperBulbBlock",
-            "SkullBlock",
-            "SmithingTableBlock",
-            "BarrelBlock",
-            "SlimeBlock",
-            "VaultBlock",
-            "DeepslateRedStoneOreBlock",
-            "CandleBlock",
-            "InfestedBlock",
-            "RootedDirtBlock",
-            "BrushableBlock",
-            "DaylightDetectorBlock",
-            "SandstoneBlock",
-            "CopperGrateBlock",
-            "PlanksBlock",
-            "GravelBlock",
-            "StoneSlabBlock3",
-            "AmethystClusterBlock",
-            "MetalBlock",
-            "RotatedPillarInfestedBlock",
-            "ColoredTorchBlock",
-            "MyceliumBlock",
-            "FireBlock",
-            "ChemistryTableBlock",
-            "DriedKelpBlock",
-            "RedstoneLampBlock",
-            "MangrovePropaguleBlock",
-            "PressurePlateBlock",
-            "AzaleaBlock",
-            "JigsawBlock",
-            "NetherrackBlock",
-            "JungleLeavesBlock",
-            "StructureVoidBlock",
-            "BlastFurnaceBlock",
-            "SnifferEggBlock",
-            "SweetBerryBushBlock",
-            "BeetrootBlock",
-            "TrapDoorBlock",
-            "SculkSensorBlock",
-            "BannerBlock",
-            "CocoaBlock",
-            "BambooSaplingBlock",
-            "StructureBlock",
-            "RepeaterBlock",
-            "KelpBlock",
-            "DoublePlantBlock",
-            "GlowstoneBlock",
-            "TorchBlock",
-            "WeightedPressurePlateBlock",
-            "SpruceLeavesBlock",
-            "SoulTorchBlock",
-            "StainedGlassBlock",
-            "MangroveLeavesBlock",
-            "EnderChestBlock",
-            "StoneSlabBlock",
-            "DoorBlock",
-            "DispenserBlock",
-            "PointedDripstoneBlock",
-            "CutCopperStairs",
-            "GrassBlock",
-            "PitcherCropBlock",
-            "DeepslateBlock",
-            "BeehiveBlock",
-            "NetherReactorBlock",
-            "ActivatorRailBlock",
-            "ReinforcedDeepslateBlock",
-            "AbstractCandleBlock",
-            "ChiseledBookshelfBlock",
-            "LadderBlock",
-            "FrogSpawnBlock",
-            "AmethystBlock",
-            "FenceBlock",
-            "AzaleaLeavesBlock",
-            "TargetBlock",
-            "RedStoneOreBlock",
-            "DecoratedPotBlock",
-            "NetherWartBlock",
-            "SnowBlock",
-            "BigDripleafBlock",
-            "SlabBlock",
-            "PotatoBlock",
-            "BubbleColumnBlock",
-            "BaseRailBlock",
-            "CandleCakeBlock",
-            "CopperTrapDoorBlock",
-            "EnchantingTableBlock",
-            "ColoredTerracottaBlock",
-            "LightBlock",
-            "LiquidBlock",
-            "LanternBlock",
-            "UndyedShulkerBoxBlock",
-            "CalibratedSculkSensorBlock",
-            "CraftingTableBlock",
-            "PinkPetalsBlock",
-            "PumpkinBlock",
-            "SmallDripleafBlock",
-            "OldLogBlock",
-            "RedstoneTorchBlock",
-            "NetherFungusBlock",
-            "AcaciaLeavesBlock",
-            "CampfireBlock",
-            "HugeMushroomBlock",
-            "GlowLichenBlock",
-            "BorderBlock",
-            "BedBlock",
-            "QuartzBlock",
-            "FenceGateBlock",
-            "ClientRequestPlaceholderBlock",
-            "CaveVinesBlock",
-            "CauldronBlock",
-            "PitcherPlantBlock",
-            "StoneSlabBlock4",
-            "WoodButtonBlock",
-            "DirtPathBlock",
-            "LecternBlock",
-            "MobSpawnerBlock",
-            "TrialSpawnerBlock",
-            "CoralBlock",
-            "LogBlock",
-            "CommandBlock",
-            "SpongeBlock",
-            "ShulkerBoxBlock",
-            "EndRodBlock",
-            "BushBlock",
-            "StoneBricksBlock",
-            "BookshelfBlock",
-            "HayBlock",
-            "MelonBlock",
-            "StoneButtonBlock",
-            "ChainBlock",
-            "ComposterBlock",
-            "PrismarineBlock",
-            "ChemicalHeatBlock",
-            "EndPortalBlock",
-            "GlassBlock",
-            "ButtonBlock",
-            "BambooStalkBlock",
-            "GrindstoneBlock",
-            "SeagrassBlock",
-            "LeverBlock",
-            "CarpetBlock",
-            "FurnaceBlock",
-            "CactusBlock",
-            "ChalkboardBlock",
-            "BeaconBlock",
-            "FlowerPotBlock",
-            "JukeboxBlock",
-            "MossBlock",
-            "NewLogBlock",
-            "MagmaBlock",
-            "TopSnowBlock",
-            "DiodeBlock",
-            "TurtleEggBlock",
-            "DetectorRailBlock",
-            "CherrySaplingBlock",
-            "ElementBlock",
-            "BirchLeavesBlock",
-            "SeaPickleBlock",
-            "RotatedPillarBlock",
-            "RailBlock",
-            "ItemFrameBlock",
-            "RedStoneWireBlock",
-            "PistonArmBlock",
-            "DarkOakLeavesBlock"
-        ];
+        List<string> targets = new List<string>();
+        targets.Add("Actor");
+        targets.Add("Mob");
 
-        foreach (string target in targets)
+        foreach (var target in targets)
         {
-            WindowsVtable winVtable;
-            if (!mWindowsVtables.TryGetValue(target, out winVtable)) continue;
-
-            Target testTarget = new(winVtable);
-
-            testTarget.mVtableSetsDirty = true;
-            testTarget.SolveRemaining();
-
-            //foreach (var entry in testTarget.mVtable)
-            //{
-            //    if (!entry.mSolved) Console.WriteLine("None");
-            //    else Console.WriteLine(entry.mOptions.First());
-            //}
+            AddTarget(target);
+            var dependants = Program.gDependencies[target];
+            
+            foreach (var dependant in dependants)
+            {
+                AddTarget(dependant);
+            }
         }
+
+
+        while (true)
+        {
+            bool didPropagate = false;
+
+            foreach (var target in Program.gTargets)
+            {
+                didPropagate |= PropagateTarget(target.Key);
+                didPropagate |= target.Value.SolveRemaining();
+            }
+
+            if (!didPropagate) break;
+        }
+
+        Program.gTargets["Actor"].LogSolved();
+        Program.gTargets["Mob"].LogSolved();
+    }
+
+    public void AddTarget(string className)
+    {
+        // Target has already been created.
+        if (Program.gTargets.ContainsKey(className)) return;
+        
+        WindowsVtable? winVtable;
+        if (!Program.gWindowsVtables.TryGetValue(className, out winVtable)) return;
+
+        Target target = new(winVtable);
+        target.SolveRemaining();
+        Program.gTargets.Add(className, target);
+    }
+
+    public bool PropagateTarget(string className)
+    {
+        bool didPropagate = false;
+        Target self = Program.gTargets[className];
+
+        foreach (var dependant in Program.gDependencies[className])
+        {
+            Target? dependency;
+            if (!Program.gTargets.TryGetValue(dependant, out dependency)) continue;
+            didPropagate |= Target.PropagateSymbols(self, dependency);
+        }
+
+        return didPropagate;
     }
 }

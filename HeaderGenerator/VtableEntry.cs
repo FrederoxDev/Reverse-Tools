@@ -32,5 +32,10 @@ internal class VtableEntry
 
         return false;
     }
+
+    public string GetSolved()
+    {
+        return mOptions.First();
+    }
 }
 

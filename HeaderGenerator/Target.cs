@@ -28,6 +28,22 @@ internal class Target
             options.IntersectWith(mRemainingSymbols);
             mVtable[i].mOptions = options;
         }
+
+        mVtableSetsDirty = true;
+    }
+
+    public bool TrySolveEntry(int vtableIndex, string symbol)
+    {
+        HashSet<string> options = new(mVtable[vtableIndex].mOptions);
+        options.IntersectWith(mRemainingSymbols);
+
+        if (options.Contains(symbol))
+        {
+            SolveEntry(vtableIndex, symbol);
+            return true;
+        }
+
+        return false;
     }
 
     public void SolveEntry(int vtableIndex, string symbol)
@@ -38,10 +54,11 @@ internal class Target
         mVtable[vtableIndex].Solve(symbol);
     }
 
-    public void SolveRemaining()
+    public bool SolveRemaining()
     {
         // Nothing has changed since the last time
-        if (!mVtableSetsDirty) return;
+        if (!mVtableSetsDirty) return false;
+        bool didEverSolveAnything = false;
 
         while (true)
         {
@@ -54,13 +71,91 @@ internal class Target
 
                 // Take the intersection of the two sets and check if 1 symbol remains.
                 entry.mOptions.IntersectWith(mRemainingSymbols);
-                didSolveAnything = entry.TrySolve();
+                didSolveAnything |= entry.TrySolve();
             }
 
+            didEverSolveAnything |= didSolveAnything;
             if (!didSolveAnything) break;
         }
 
         // Mark as clean as there are no unresolved entries.
         mVtableSetsDirty = false;
+        return didEverSolveAnything;
+    }
+
+    public void LogSolved()
+    {
+        Console.WriteLine($"vtable for {mClassName}:");
+        int total = 0;
+        int success = 0;
+
+        foreach (VtableEntry entry in mVtable)
+        {
+            total += 1;
+
+            if (!entry.mSolved)
+            {
+                Console.WriteLine($"None: {entry.mOptions.Count} remaining options.");
+            }
+            else
+            {
+                Console.WriteLine(entry.mOptions.First());
+                success += 1;
+            }
+        }
+
+        Console.WriteLine($"Solved {success} / {total}\n");
+    }
+
+    static string ChangeSymbolClass(string className, string newClass, string symbol)
+    {
+        return ReplaceFirst(symbol, $"@{className}@@", $"@{newClass}@@");
+    }
+
+    public static bool PropagateSymbols(Target parent, Target child)
+    {
+        bool didSolveAnything = false;
+
+        for (int i = 0; i < parent.mVtable.Count; i++)
+        {
+            var parentVtable = parent.mVtable[i];
+            var childVtable = child.mVtable[i];
+
+            // Both are already solved, or neither are solved!
+            if (parentVtable.mSolved == childVtable.mSolved) continue;
+
+            // Propagate name downwards
+            if (childVtable.mSolved)
+            {
+                string parentSolution = ChangeSymbolClass(child.mClassName, parent.mClassName, childVtable.GetSolved());
+                didSolveAnything |= parent.TrySolveEntry(i, parentSolution);
+            }
+
+            if (parentVtable.mSolved)
+            {
+                string childSolution = ChangeSymbolClass(parent.mClassName, child.mClassName, parentVtable.GetSolved());
+
+                if (child.TrySolveEntry(i, childSolution))
+                {
+                    didSolveAnything = true;
+                    continue;
+                }
+
+                child.SolveEntry(i, parentVtable.GetSolved());
+            }
+        }
+
+        return didSolveAnything;
+    }
+
+    static string ReplaceFirst(string text, string search, string replace)
+    {
+        int pos = text.IndexOf(search);
+        if (pos < 0)
+        {
+            return text;
+        }
+        return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
     }
 }
+
