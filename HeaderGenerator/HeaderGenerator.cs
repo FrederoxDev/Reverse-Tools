@@ -26,10 +26,13 @@ internal class HeaderGenerator
             }
         }
 
+        int count = 0;
 
         while (true)
         {
+            count += 1;
             bool didPropagate = false;
+            Console.WriteLine($"Propagation pass: {count}");
 
             foreach (var target in Program.gTargets)
             {

@@ -70,6 +70,10 @@ internal class Target
                 if (entry.mSolved) continue;
 
                 // Take the intersection of the two sets and check if 1 symbol remains.
+                //
+                // THIS LOGIC IS NOT COMPLETE! 1 ENTRY REMAINING IS NOT ALWAYS THE SOLUTION
+                // FOR CLASSES WHICH INHERIT A SYMBOL THROUGH A VTABLE
+                //
                 entry.mOptions.IntersectWith(mRemainingSymbols);
                 didSolveAnything |= entry.TrySolve();
             }
@@ -95,7 +99,13 @@ internal class Target
 
             if (!entry.mSolved)
             {
-                Console.WriteLine($"None: {entry.mOptions.Count} remaining options.");
+                Console.WriteLine($"--- {entry.mOptions.Count} remaining options. ---");
+                foreach (var opt in entry.mOptions)
+                {
+                    Console.WriteLine(opt);
+                }
+
+                Console.WriteLine("--- end ---\n");
             }
             else
             {
