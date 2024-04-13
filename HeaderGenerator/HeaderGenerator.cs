@@ -23,6 +23,8 @@ internal class HeaderGenerator
             foreach (var dependant in dependants)
             {
                 AddTarget(dependant);
+
+                Program.gTargets[dependant].AddParent(Program.gTargets[target]);
             }
         }
 
@@ -56,7 +58,6 @@ internal class HeaderGenerator
         if (!Program.gWindowsVtables.TryGetValue(className, out winVtable)) return;
 
         Target target = new(winVtable);
-        target.SolveRemaining();
         Program.gTargets.Add(className, target);
     }
 

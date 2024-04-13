@@ -10,16 +10,18 @@ internal class Target
     public HashSet<string> mRemainingSymbols;
     public List<VtableEntry> mVtable;
     public bool mVtableSetsDirty;
+    public List<Target> mParents;
 
     public Target(WindowsVtable windowsVtable)
     {
         mClassName = windowsVtable.mName;
         mRemainingSymbols = windowsVtable.mVirtualSymbolSet;
         mVtable = [];
+        mParents = new();
         
         for (int i = 0; i < windowsVtable.mEntries.Count; i++)
         {
-            mVtable.Add(new());
+            mVtable.Add(new(windowsVtable.mEntries[i]));
         }
 
         for (int i = 0; i < windowsVtable.mEntries.Count; i++) 
@@ -30,6 +32,20 @@ internal class Target
         }
 
         mVtableSetsDirty = true;
+    }
+
+    public void AddParent(Target parent)
+    {
+        // Mark any functions which are inherited as such so the resolver
+        // doesn't try and resolve them.
+        for (int i = 0; i < parent.mVtable.Count; i++)
+        {
+            if (mVtable[i].mAddress == parent.mVtable[i].mAddress)
+            {
+                mVtable[i].mSolved = true;
+                mVtable[i].mIsInherited = true;
+            }
+        }
     }
 
     public bool TrySolveEntry(int vtableIndex, string symbol)
@@ -68,12 +84,6 @@ internal class Target
             foreach (VtableEntry entry in mVtable)
             {
                 if (entry.mSolved) continue;
-
-                // Take the intersection of the two sets and check if 1 symbol remains.
-                //
-                // THIS LOGIC IS NOT COMPLETE! 1 ENTRY REMAINING IS NOT ALWAYS THE SOLUTION
-                // FOR CLASSES WHICH INHERIT A SYMBOL THROUGH A VTABLE
-                //
                 entry.mOptions.IntersectWith(mRemainingSymbols);
                 didSolveAnything |= entry.TrySolve();
             }
@@ -109,8 +119,16 @@ internal class Target
             }
             else
             {
-                Console.WriteLine(entry.mOptions.First());
                 success += 1;
+
+                if (entry.mIsInherited)
+                {
+                    Console.WriteLine("Inherited");
+                }
+                else
+                {
+                    Console.WriteLine(entry.mOptions.First());
+                }
             }
         }
 
@@ -135,7 +153,7 @@ internal class Target
             if (parentVtable.mSolved == childVtable.mSolved) continue;
 
             // Propagate name downwards
-            if (childVtable.mSolved)
+            if (childVtable.mSolved && !childVtable.mIsInherited)
             {
                 string parentSolution = ChangeSymbolClass(child.mClassName, parent.mClassName, childVtable.GetSolved());
                 didSolveAnything |= parent.TrySolveEntry(i, parentSolution);

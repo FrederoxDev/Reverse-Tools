@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 
 internal class VtableEntry
 {
+    public bool mIsInherited;
     public bool mSolved;
+    public ulong mAddress;
     public HashSet<string> mOptions;
 
-    public VtableEntry()
+    public VtableEntry(ulong address)
     {
+        mAddress = address;
         mSolved = false;
+        mIsInherited = false;
         mOptions = new();
     }
 
@@ -35,6 +39,11 @@ internal class VtableEntry
 
     public string GetSolved()
     {
+        if (mIsInherited)
+        {
+            return "Inherited";
+        }
+
         return mOptions.First();
     }
 }
