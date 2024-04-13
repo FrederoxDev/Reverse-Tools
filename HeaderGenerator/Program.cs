@@ -6,6 +6,8 @@ internal class Program {
     public static Dictionary<string, WindowsVtable> gWindowsVtables = [];
     public static Dictionary<string, List<string>> gDependencies = [];
     public static Dictionary<string, Target> gTargets = [];
+    public static Dictionary<string, Target> gFinalData = [];
+    public static int targetsEvaluated = 0;
 
     static void Main(string[] args)
     {
@@ -22,10 +24,18 @@ internal class Program {
         stopwatch.Restart();
 
         HeaderGenerator headerGenerator = new HeaderGenerator();
+        headerGenerator.Generate(["Item"]);
+        headerGenerator.Generate(["Block"]);
+        headerGenerator.Generate(["ItemStackBase", "ItemStack", "ItemInstance"]);
+        headerGenerator.Generate(["Actor", "Mob", "Player"]);
 
-        headerGenerator.Generate();
         stopwatch.Stop();
-        Console.WriteLine($"First pass: {stopwatch.Elapsed.TotalSeconds}s total, {stopwatch.Elapsed.TotalMilliseconds / gTargets.Count}ms each");
+        Console.WriteLine($"Finished in: {stopwatch.Elapsed.TotalSeconds}s total, on average {stopwatch.ElapsedMilliseconds / targetsEvaluated}ms per vtable.");
+        
+        foreach(var target in gFinalData)
+        {
+            target.Value.LogSolved();
+        }
 
         Console.ReadLine();
     }

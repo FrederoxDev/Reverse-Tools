@@ -10,14 +10,12 @@ internal class Target
     public HashSet<string> mRemainingSymbols;
     public List<VtableEntry> mVtable;
     public bool mVtableSetsDirty;
-    public List<Target> mParents;
 
     public Target(WindowsVtable windowsVtable)
     {
         mClassName = windowsVtable.mName;
         mRemainingSymbols = windowsVtable.mVirtualSymbolSet;
         mVtable = [];
-        mParents = new();
         
         for (int i = 0; i < windowsVtable.mEntries.Count; i++)
         {

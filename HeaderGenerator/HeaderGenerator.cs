@@ -9,12 +9,8 @@ internal class HeaderGenerator
 {
     public HeaderGenerator() {}
 
-    public void Generate()
+    public void Generate(List<string> targets)
     {
-        List<string> targets = new List<string>();
-        targets.Add("Actor");
-        targets.Add("Mob");
-
         foreach (var target in targets)
         {
             AddTarget(target);
@@ -24,7 +20,10 @@ internal class HeaderGenerator
             {
                 AddTarget(dependant);
 
-                Program.gTargets[dependant].AddParent(Program.gTargets[target]);
+                Target? dependantTarget;
+                if (!Program.gTargets.TryGetValue(dependant, out dependantTarget)) continue;
+
+                dependantTarget.AddParent(Program.gTargets[target]);
             }
         }
 
@@ -45,8 +44,12 @@ internal class HeaderGenerator
             if (!didPropagate) break;
         }
 
-        Program.gTargets["Actor"].LogSolved();
-        Program.gTargets["Mob"].LogSolved();
+        foreach (var target in targets)
+        {
+            Program.gFinalData.Add(target, Program.gTargets[target]);
+        }
+
+        Program.gTargets.Clear();
     }
 
     public void AddTarget(string className)
@@ -59,6 +62,7 @@ internal class HeaderGenerator
 
         Target target = new(winVtable);
         Program.gTargets.Add(className, target);
+        Program.targetsEvaluated += 1;
     }
 
     public bool PropagateTarget(string className)
