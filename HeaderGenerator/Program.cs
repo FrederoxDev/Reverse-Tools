@@ -30,13 +30,14 @@ internal class Program {
         headerGenerator.Generate(["Actor", "Mob", "Player"]);
 
         stopwatch.Stop();
-        Console.WriteLine($"Finished in: {stopwatch.Elapsed.TotalSeconds}s total, on average {stopwatch.ElapsedMilliseconds / targetsEvaluated}ms per vtable.");
-        
-        foreach(var target in gFinalData)
+
+        foreach (var target in gFinalData)
         {
-            target.Value.LogSolved();
+            target.Value.LogSummary();
         }
 
+        Console.WriteLine($"\nFinished in: {stopwatch.Elapsed.TotalSeconds} seconds");
+        Console.WriteLine($"\tEvaluated {targetsEvaluated} vtables, on average taking {stopwatch.ElapsedMilliseconds / targetsEvaluated}ms per vtable.");
         Console.ReadLine();
     }
 
@@ -84,6 +85,14 @@ internal class Program {
         {
             List<string> symbols = entry.Value!.ToObject<List<string>>()!;
             gDependencies.Add(entry.Key, symbols);
+        }
+    }
+
+    static void DumpEvaluatedOrder()
+    {
+        foreach (var target in gTargets)
+        {
+            target.Value
         }
     }
 }

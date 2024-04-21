@@ -133,6 +133,20 @@ internal class Target
         Console.WriteLine($"Solved {success} / {total}\n");
     }
 
+    public void LogSummary()
+    {
+        int total = 0;
+        int success = 0;
+
+        foreach (VtableEntry entry in mVtable)
+        {
+            if (entry.mSolved) success += 1;
+            total += 1;
+        }
+
+        Console.WriteLine($"{mClassName}: [{success} / {total}]");
+    }
+
     static string ChangeSymbolClass(string className, string newClass, string symbol)
     {
         return ReplaceFirst(symbol, $"@{className}@@", $"@{newClass}@@");
