@@ -1,9 +1,0 @@
-# Ignore temp files.
-obj/
-bin/
-.vs/
-.antlr/
-
-# Exlude automatically generated parser files.
-Cxx/**
-!Cxx/Cxx.g4
